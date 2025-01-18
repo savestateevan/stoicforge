@@ -29,7 +29,9 @@ export default function StudyAILanding() {
                 </p>
               </div>
               <div className="space-x-4">
-                <Button>Get Started</Button>
+                <Button>
+                  <Link href="/pricing">Get Started</Link>
+                </Button>
                 <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white">Learn More</Button>
               </div>
             </div>
