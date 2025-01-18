@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import Header from '@/components/Header'
 import { StripeCheckoutButton } from '@/components/StripeCheckoutButton'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Check } from 'lucide-react'
-
+import { ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 const pricingPlans = [
   {
     name: 'Beginner',
@@ -25,14 +27,15 @@ const pricingPlans = [
 export default function PricingPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="flex items-center h-16 px-4 border-b bg-white dark:bg-gray-800">
-        <h1 className="text-lg font-semibold">Pricing</h1>
-        <nav className="ml-auto">
-          <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
-            Back Home
-          </Link>
-        </nav>
-      </header>
+      <Header />
+      <div className="flex justify-end">
+        <Link href="/">
+          <Button variant="outline" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Home
+          </Button>
+        </Link>
+      </div>
       <main className="flex-1 p-4 md:p-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Choose Your Plan</h2>

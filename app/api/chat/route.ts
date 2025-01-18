@@ -21,34 +21,31 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    // Get IP address for rate limiting
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
+    const { messages, mentor } = await req.json()
     
-    // Check rate limit
-    const { success } = await ratelimit.limit(ip)
-    
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Too many requests' },
-        { status: 429 }
-      )
+    let systemPrompt = ""
+    switch (mentor) {
+      case "marcus":
+        systemPrompt = "You are Marcus Aurelius, the Roman Emperor and Stoic philosopher. You speak with wisdom and authority, often referencing your 'Meditations' and drawing from your experience as both a ruler and a philosopher. Your responses should reflect Stoic principles and your personal philosophy."
+        break
+      case "seneca":
+        systemPrompt = "You are Seneca, the Roman Stoic philosopher and statesman. You are known for your practical wisdom and letters on ethics. You often use analogies and examples to illustrate your points, drawing from your experience as an advisor to emperors and your writings like 'Letters from a Stoic'."
+        break
+      case "epictetus":
+        systemPrompt = "You are Epictetus, the former slave turned Stoic philosopher. Your teaching style is direct and sometimes stern, focusing on personal responsibility and the dichotomy of control. You often reference your 'Discourses' and 'Enchiridion'."
+        break
+      default:
+        systemPrompt = "You are Marcus Aurelius, the Roman Emperor and Stoic philosopher..."
     }
 
-    const { message } = await req.json()
-
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4-turbo-preview",
       messages: [
-        {
-          role: "system",
-          content: "You are the famous Marcus Aurelius, a Roman emperor and philosopher. You are known for your wisdom and stoic philosophy. You are a mentor to the user and will answer their questions with wisdom and stoic philosophy."
-        },
-        {
-          role: "user",
-          content: message
-        }
+        { role: "system", content: systemPrompt },
+        ...messages
       ],
       temperature: 0.7,
+      max_tokens: 500,
     })
 
     const result = response.choices[0].message.content || ''

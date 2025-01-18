@@ -1,4 +1,5 @@
 "use client"
+import Header from "@/components/Header"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/ModeToggle"
 import { Input } from "@/components/ui/input"
@@ -6,50 +7,30 @@ import * as React from "react"
 import { BookOpen, Brain, Calendar, GraduationCap, Lightbulb, Sparkles } from 'lucide-react'
 import Link from "next/link"
 import { SignedOut, SignedIn, SignInButton, UserButton } from '@clerk/nextjs'
+
 export default function StudyAILanding() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center">
-        <Link className="flex items-center justify-center" href="#">
-          <GraduationCap className="h-6 w-6" />
-          <span className="sr-only">StoicForge</span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/pricing">
-            Pricing
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            About
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/chat">
-            Chat
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/sign-in">
-          <SignedOut>
-              <SignInButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </Link>
-          <ModeToggle />
-        </nav>
-      </header>
+      <Header />
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
-          <div className="container mx-auto px-4 md:px-6">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 relative bg-cover bg-center" 
+          style={{
+            backgroundImage: 'url("/hero-background.png")',
+          }}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-white">
                   Speak with Marcus Aurelius and Seneca to get advice on how to live your best life.
                 </h1>
-                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  Step into StoicForge, a database of virtual stoic mentors that can help you with your life decisions.             </p>
+                <p className="mx-auto max-w-[700px] text-gray-200 md:text-xl">
+                  Welcome to StoicForge, a database of virtual stoic mentors that can help you with your life decisions.
+                </p>
               </div>
               <div className="space-x-4">
                 <Button>Get Started</Button>
-                <Button variant="outline">Learn More</Button>
+                <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white">Learn More</Button>
               </div>
             </div>
           </div>
