@@ -26,7 +26,7 @@ const pricingPlans = [
 
 export default function PricingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="container mx-auto">
       <Header />
       <div className="flex justify-end">
         <Link href="/">
