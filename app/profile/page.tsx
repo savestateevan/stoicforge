@@ -67,9 +67,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="container mx-auto">
-        <Header />
-            <div className="flex justify-end mb-4">
+    <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <Header />
+        <div className="flex justify-end mb-4">
                 <Button variant="outline" className="flex items-center gap-2" asChild>
                     <Link href="/">
                         <ArrowLeft className="h-4 w-4" />
