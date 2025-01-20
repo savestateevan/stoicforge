@@ -11,6 +11,8 @@ import remarkGfm  from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { useUser } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 
 type Message = {
   role: 'user' | 'assistant'
@@ -18,12 +20,31 @@ type Message = {
 }
 
 export default function ChatInterface() {
+  const { user, isLoaded } = useUser()
+  const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
   const [mentor, setMentor] = useState("marcus")
+  const [tokenBalance, setTokenBalance] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (user) {
+      fetchTokenBalance()
+    }
+  }, [user])
+
+  const fetchTokenBalance = async () => {
+    try {
+      const response = await fetch('/api/tokens/balance')
+      const data = await response.json()
+      setTokenBalance(data.balance)
+    } catch (error) {
+      console.error('Error fetching token balance:', error)
+    }
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -34,6 +55,17 @@ export default function ChatInterface() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
+    if (!user) {
+      router.push('/sign-in')
+      return
+    }
+    if (tokenBalance !== null && tokenBalance <= 0) {
+      toast({
+        variant: "destructive",
+        description: 'You have no tokens left. Please purchase more to continue.'
+      })
+      return
+    }
 
     const userMessage: Message = {
       role: 'user',
@@ -80,9 +112,22 @@ export default function ChatInterface() {
     }
   }
 
+  if (!isLoaded) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[600px] border rounded-lg">
+        <p className="text-lg mb-4">Please sign in to chat with Stoic mentors</p>
+        <Button onClick={() => router.push('/sign-in')}>Sign In</Button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-[600px] border rounded-lg">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex justify-between items-center">
         <Select value={mentor} onValueChange={setMentor}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select your mentor" />
@@ -93,6 +138,9 @@ export default function ChatInterface() {
             <SelectItem value="epictetus">Epictetus</SelectItem>
           </SelectContent>
         </Select>
+        <div className="text-sm">
+          Tokens remaining: {tokenBalance ?? '...'}
+        </div>
       </div>
       <Card className="w-full max-w-4xl mx-auto">
         <CardContent className="p-6">

@@ -1,7 +1,9 @@
 import OpenAI from 'openai'
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { db } from '@/lib/db'
+import { getAuth } from '@clerk/nextjs/server'
 
 // Initialize Redis client
 const redis = new Redis({
@@ -19,10 +21,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { messages, mentor } = await req.json()
+    const { userId } = getAuth(req);
     
+    const { messages, mentor } = await req.json()
+    const id = userId as string;
+    
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     let systemPrompt = ""
     switch (mentor) {
       case "marcus":
@@ -37,6 +46,19 @@ export async function POST(req: Request) {
       default:
         systemPrompt = "You are Marcus Aurelius, the Roman Emperor and Stoic philosopher..."
     }
+
+    const userCredits = await db.user.findUnique({
+      where: { id: userId },
+    });
+    
+    if (!userCredits || userCredits.credits <= 0) {
+      return new NextResponse("You have run out of credits.", { status: 403 });
+    }
+
+    await db.user.update({
+      where: { id: userId },
+      data: { credits: { decrement: 1 } },
+    });
 
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo-preview",
