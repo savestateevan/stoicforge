@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
     
-    const { messages, mentor } = await req.json()
+    const { messages, mentor, saveHistory } = await req.json()
     const id = userId as string;
     
     if (!userId) {
@@ -71,6 +71,26 @@ export async function POST(req: NextRequest) {
     })
 
     const result = response.choices[0].message.content || ''
+
+    if (saveHistory) {
+      // Save both user message and AI response
+      await db.message.createMany({
+        data: [
+          {
+            userId,
+            content: messages[messages.length - 1].content,
+            role: 'user',
+            mentorId: mentor,
+          },
+          {
+            userId,
+            content: result,
+            role: 'assistant',
+            mentorId: mentor,
+          }
+        ]
+      })
+    }
 
     return NextResponse.json({ result })
 

@@ -1,4 +1,7 @@
 // 5. Create a cancellation page component (pages/cancel-subscription.js):
+
+"use client"
+
 import { useState } from 'react';
 
 export default function CancelSubscription() {

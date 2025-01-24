@@ -31,6 +31,7 @@ model User {
   tasks           Task[]
   studyMaterials  StudyMaterial[]
   progress        UserProgress?
+  messages        Message[]
 }
 
 enum SubscriptionType {
@@ -131,7 +132,7 @@ model UserSubscription {
   updatedAt              DateTime? @updatedAt
   name                   String?
   email                  String?
-  credits                Int       @default(0) // New credits field
+  credits                Int       @default(100) // New credits field
   user                   User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -149,4 +150,16 @@ enum Framework {
   BAB
   CARE
   RISE
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  role      String
+  mentorId  String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }

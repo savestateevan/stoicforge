@@ -1,7 +1,10 @@
+'use client'
+
 import { GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { ModeToggle } from "./ModeToggle";
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Credits } from './Credits'
 
 export default function Header() {
   return (
@@ -11,6 +14,7 @@ export default function Header() {
         <span className="sr-only">StoicForge</span>
       </Link>
       <nav className="ml-auto flex items-center gap-4 sm:gap-6">
+        <Credits />
         <Link className="text-sm font-medium hover:underline underline-offset-4" href="/pricing">
           Pricing
         </Link>

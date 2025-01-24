@@ -1,6 +1,6 @@
 import { getAuth } from "@clerk/nextjs/server"
-import { db } from "@/lib/db"
 import { NextResponse, NextRequest } from "next/server"
+import { db } from "@/lib/db"
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,16 +12,20 @@ export async function GET(req: NextRequest) {
 
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { credits: true }
+      select: { 
+        id: true,
+        credits: true,
+        subscritpion: true 
+      }
     })
 
     if (!user) {
       return new NextResponse("User not found", { status: 404 })
     }
 
-    return NextResponse.json({ balance: user.credits })
+    return NextResponse.json({ credits: user.credits })
   } catch (error) {
-    console.error("[TOKENS_BALANCE]", error)
+    console.error("[CREDITS_BALANCE]", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 } 

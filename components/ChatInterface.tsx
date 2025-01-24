@@ -17,6 +17,8 @@ import { useRouter } from "next/navigation"
 type Message = {
   role: 'user' | 'assistant'
   content: string
+  createdAt?: Date
+  mentorId?: string
 }
 
 export default function ChatInterface() {
@@ -28,21 +30,34 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
   const [mentor, setMentor] = useState("marcus")
-  const [tokenBalance, setTokenBalance] = useState<number | null>(null)
+  const [credits, setCredits] = useState<number | null>(null)
 
   useEffect(() => {
     if (user) {
-      fetchTokenBalance()
+      fetchCredits()
+      fetchChatHistory()
     }
   }, [user])
 
-  const fetchTokenBalance = async () => {
+  const fetchCredits = async () => {
     try {
-      const response = await fetch('/api/tokens/balance')
+      const response = await fetch('/api/credits/balance')
       const data = await response.json()
-      setTokenBalance(data.balance)
+      setCredits(data.credits)
     } catch (error) {
-      console.error('Error fetching token balance:', error)
+      console.error('Error fetching credits:', error)
+    }
+  }
+
+  const fetchChatHistory = async () => {
+    try {
+      const response = await fetch('/api/chat/history')
+      const data = await response.json()
+      if (data.messages) {
+        setMessages(data.messages)
+      }
+    } catch (error) {
+      console.error('Error fetching chat history:', error)
     }
   }
 
@@ -59,10 +74,10 @@ export default function ChatInterface() {
       router.push('/sign-in')
       return
     }
-    if (tokenBalance !== null && tokenBalance <= 0) {
+    if (credits !== null && credits <= 0) {
       toast({
         variant: "destructive",
-        description: 'You have no tokens left. Please purchase more to continue.'
+        description: 'You have no credits left. Please purchase more to continue.'
       })
       return
     }
@@ -70,6 +85,8 @@ export default function ChatInterface() {
     const userMessage: Message = {
       role: 'user',
       content: input,
+      createdAt: new Date(),
+      mentorId: mentor
     }
 
     setMessages((prev) => [...prev, userMessage])
@@ -85,6 +102,7 @@ export default function ChatInterface() {
         body: JSON.stringify({
           messages: [...messages, userMessage],
           mentor: mentor,
+          saveHistory: true
         }),
       })
 
@@ -100,6 +118,9 @@ export default function ChatInterface() {
       }
       
       setMessages(prev => [...prev, aiMessage])
+      
+      // Fetch updated credits after successful chat
+      fetchCredits()
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to get response from AI'
       toast({
@@ -139,7 +160,7 @@ export default function ChatInterface() {
           </SelectContent>
         </Select>
         <div className="text-sm">
-          Tokens remaining: {tokenBalance ?? '...'}
+          {credits !== null ? `${credits} credits remaining` : 'Loading...'}
         </div>
       </div>
       <Card className="w-full max-w-4xl mx-auto">

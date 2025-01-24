@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast' 
+import { useUser } from '@clerk/nextjs'
 
 // Make sure to replace with your actual Stripe publishable key
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -15,6 +16,7 @@ interface StripeCheckoutButtonProps {
 
 export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const user = useUser()
 
   const handleCheckout = async () => {
     setIsLoading(true)
@@ -25,7 +27,12 @@ export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButton
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ 
+          items,
+          metadata: {
+            userId: user.user?.id
+          }
+        }),
       })
 
       const data = await response.json()
@@ -57,7 +64,7 @@ export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButton
       setIsLoading(false)
     }
   }
-
+  
   return (
     <Button onClick={handleCheckout} disabled={isLoading}>
       {isLoading ? 'Loading...' : buttonText}
