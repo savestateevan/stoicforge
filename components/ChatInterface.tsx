@@ -192,10 +192,14 @@ export default function ChatInterface() {
                   ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2" {...props} />,
                   li: ({node, ...props}) => <li className="mb-1" {...props} />,
                   blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-gray-300 pl-2 italic my-2" {...props} />,
-                  code: ({node, inline, ...props}) => 
+                  code: ({node, inline, children, ...props}: {
+                    node?: any;
+                    inline?: boolean;
+                    children?: React.ReactNode;
+                  } & React.HTMLAttributes<HTMLElement>) => 
                     inline 
-                      ? <code className="bg-gray-200 rounded px-1" {...props} />
-                      : <pre className="bg-gray-200 rounded p-2 overflow-x-auto" {...props} />,
+                      ? <code className="bg-gray-200 rounded px-1" {...props}>{children}</code>
+                      : <pre className="bg-gray-200 rounded p-2 overflow-x-auto" {...props}>{children}</pre>,
                 }}
               >
                 {message.content || ''}
