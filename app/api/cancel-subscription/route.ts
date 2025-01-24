@@ -1,17 +1,17 @@
 import { stripe } from '../../../lib/stripe';
+import { NextResponse } from 'next/server'
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
-  const { subscriptionId } = req.body;
-
+export async function POST(req: Request) {
   try {
-    const canceledSubscription = await stripe.subscriptions.del(subscriptionId);
-    res.status(200).json(canceledSubscription);
+    const { subscriptionId } = await req.json()
+    
+    const canceledSubscription = await stripe.subscriptions.del(subscriptionId)
+    return NextResponse.json(canceledSubscription)
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'An unknown error occurred'  });
+    console.error('Error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'An unknown error occurred' },
+      { status: 500 }
+    )
   }
 }
