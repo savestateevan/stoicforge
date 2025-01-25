@@ -19,12 +19,19 @@ export default async function ProfilePage() {
     },
     select: {
       id: true,
+      status: true,
+      imageUrl: true,
+      email: true,
       name: true,
       bio: true,
       isPublic: true,
       userId: true,
       createdAt: true,
-      updatedAt: true
+      updatedAt: true,
+      twitch: true,
+      youtube: true,
+      instagram: true,
+      twitter: true,
     }
   })
 

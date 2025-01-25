@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Profile } from '@prisma/client';
+import  Profile  from '@prisma/client';
 import  profileFormSchema  from '@/lib/validations/profile';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -15,12 +15,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/Header";
 
-interface ProfilePageProps {
+interface Profile {
+  userId: string;
+  id: string;
+  name: string | null;
+  imageUrl: string | null;
+  email: string | null;
+  bio: string | null;
+  status: string | null;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  twitch?: string | null;
+  youtube?: string | null;
+  instagram?: string | null;
+  twitter?: string | null;
+}
+
+interface ProfileClientProps {
   initialProfile: Profile | null;
   userId: string;
 }
 
-export default function ProfileClient({ initialProfile, userId }: ProfilePageProps) {
+export default function ProfileClient({ initialProfile, userId }: ProfileClientProps) {
   const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<z.infer<typeof profileFormSchema>>({
