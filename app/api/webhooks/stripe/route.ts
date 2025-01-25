@@ -7,11 +7,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-12-18.acacia'
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get('Stripe-Signature') as string;
+  const signature = headers().get('Stripe-Signature')!;
 
   let event: Stripe.Event;
 
@@ -19,39 +17,34 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      webhookSecret
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (error: any) {
-    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
-  }
 
-  const session = event.data.object as Stripe.Checkout.Session;
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.metadata?.userId;
 
-  if (event.type === 'checkout.session.completed') {
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-    
-    // Get the price ID from the subscription
-    const priceId = subscription.items.data[0].price.id;
-    
-    // Define credit amounts for different price tiers
-    const creditsByPriceId: Record<string, number> = {
-      'price_1QaoC5ISdNa3NclOt5MQPbR3': 150,  // Replace with your actual price IDs
-      'price_1QaojPISdNa3NclOEL5MFFsA': 300,
-      // Add more price tiers as needed
-    };
+      if (!userId) {
+        return new NextResponse('No userId in metadata', { status: 400 });
+      }
 
-    // Update user credits based on the price ID
-    await db.user.update({
-      where: {
-        id: session.metadata?.userId,
-      },
-      data: {
-        credits: {
-          increment: creditsByPriceId[priceId] || 0,
+      // Update user credits
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          credits: {
+            increment: 150 // Adjust this value based on your business logic
+          }
         },
-      },
-    });
-  }
+      });
+    }
 
-  return new NextResponse(null, { status: 200 });
+    return new NextResponse(null, { status: 200 });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return new NextResponse(
+      'Webhook error: ' + (error as Error).message,
+      { status: 400 }
+    );
+  }
 } 

@@ -15,10 +15,19 @@ interface StripeCheckoutButtonProps {
 }
 
 export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButtonProps) {
+  const { user } = useUser()
   const [isLoading, setIsLoading] = useState(false)
-  const user = useUser()
 
   const handleCheckout = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to make a purchase",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -30,7 +39,7 @@ export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButton
         body: JSON.stringify({ 
           items,
           metadata: {
-            userId: user.user?.id
+            userId: user.id
           }
         }),
       })

@@ -12,11 +12,7 @@ export async function GET(req: NextRequest) {
 
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { 
-        id: true,
-        credits: true,
-        subscritpion: true 
-      }
+      select: { credits: true }
     })
 
     if (!user) {
@@ -25,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ credits: user.credits })
   } catch (error) {
-    console.error("[CREDITS_BALANCE]", error)
-    return new NextResponse("Internal Error", { status: 500 })
+    console.error('[CREDITS_GET]', error)
+    return new NextResponse("Internal error", { status: 500 })
   }
 } 

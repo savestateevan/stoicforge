@@ -8,8 +8,10 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 })
     }
+
+    const { name, bio, isPublic } = body
 
     const profile = await db.profile.upsert({
       where: {
@@ -17,18 +19,20 @@ export async function POST(req: Request) {
       },
       create: {
         userId: userId,
-        name: body.name,
-        bio: body.bio,
+        name,
+        bio,
+        isPublic,
       },
       update: {
-        name: body.name,
-        bio: body.bio,
+        name,
+        bio,
+        isPublic,
       },
-    });
+    })
 
-    return NextResponse.json(profile);
+    return NextResponse.json(profile)
   } catch (error) {
-    console.log("[PROFILE_POST]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error('[PROFILE_POST]', error)
+    return new NextResponse("Internal Error", { status: 500 })
   }
 } 
