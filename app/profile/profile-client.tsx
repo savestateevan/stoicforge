@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import  Profile  from '@prisma/client';
+import  Profile from '@prisma/client';
 import  profileFormSchema  from '@/lib/validations/profile';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
