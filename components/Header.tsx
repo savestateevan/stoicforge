@@ -29,7 +29,7 @@ export default function Header() {
             <SignInButton />
           </SignedOut>
           <SignedIn>
-            <UserButton afterSignOutUrl="" />
+            <UserButton  />
           </SignedIn>
         </div>
         <ModeToggle />
