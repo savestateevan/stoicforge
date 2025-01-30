@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Header from '@/components/Header'
 import { StripeCheckoutButton } from '@/components/StripeCheckoutButton'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Check } from 'lucide-react'
@@ -27,7 +26,6 @@ const pricingPlans = [
 export default function PricingPage() {
   return (
     <div className="container mx-auto">
-      <Header />
       <div className="flex justify-end">
         <Link href="/">
           <Button variant="outline" className="flex items-center gap-2">

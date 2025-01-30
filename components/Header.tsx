@@ -3,7 +3,7 @@
 import { GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { ModeToggle } from "./ModeToggle";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import { Credits } from './Credits'
 
 export default function Header() {
@@ -29,7 +29,7 @@ export default function Header() {
             <SignInButton />
           </SignedOut>
           <SignedIn>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton afterSignOutUrl="" />
           </SignedIn>
         </div>
         <ModeToggle />

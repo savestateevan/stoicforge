@@ -1,19 +1,15 @@
 "use client"
 
-import Header from "@/components/Header"
 import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/ModeToggle"
 import { Input } from "@/components/ui/input"
 import * as React from "react"
-import { BookOpen, Brain, Calendar, GraduationCap, Lightbulb, Sparkles } from 'lucide-react'
+import {  Brain, Calendar, Lightbulb, } from 'lucide-react'
 import Link from "next/link"
-import { SignedOut, SignedIn, SignInButton, UserButton } from '@clerk/nextjs'
 import Footer from "@/components/Footer"
 
 export default function StudyAILanding() {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 relative bg-cover bg-center" 
           style={{

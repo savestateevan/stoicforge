@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs'
+import Header from '@/components/Header'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 
@@ -11,23 +12,14 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <header>
-            {/* <SignedOut>
-              <SignInButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn> */}
-          </header>
+          <Header />
           <main>{children}</main>
           </ThemeProvider>
         </body>
       </html>
-        
     </ClerkProvider>
   )
 }
