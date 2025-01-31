@@ -3,7 +3,7 @@
 import { GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { ModeToggle } from "./ModeToggle";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { AuthButtons } from "./auth/AuthButtons";
 import { Credits } from './Credits'
 
 export default function Header() {
@@ -24,14 +24,7 @@ export default function Header() {
         <Link className="text-sm font-medium hover:underline underline-offset-4" href="/profile">
           Profile
         </Link>
-        <div className="text-sm font-medium flex items-center">
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton  />
-          </SignedIn>
-        </div>
+        <AuthButtons />
         <ModeToggle />
       </nav>
     </header>

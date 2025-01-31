@@ -13,10 +13,17 @@ export function Credits() {
       if (!user) return
       
       try {
-        const response = await fetch('/api/credits/balance')
+        const response = await fetch('/api/credits', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
         if (!response.ok) {
           throw new Error('Failed to fetch credits')
         }
+        
         const data = await response.json()
         setCredits(data.credits)
       } catch (error) {
