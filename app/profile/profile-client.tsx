@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import Header from "@/components/Header";
 
 interface Profile {
   userId: string;
@@ -65,7 +64,6 @@ export default function ProfileClient({ initialProfile, userId }: ProfileClientP
 
   return (
     <div className="max-w-full">
-        <Header />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 mb-4 ml-4">
           <FormField
