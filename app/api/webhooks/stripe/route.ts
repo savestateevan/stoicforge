@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         where: { id: userId },
         data: {
           credits: {
-            increment: 150 // Adjust this value based on your business logic
+            increment: 100 // Adjust this value based on your business logic
           }
         },
       });
