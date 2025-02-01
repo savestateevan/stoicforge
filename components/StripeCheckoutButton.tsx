@@ -10,8 +10,11 @@ import { useUser } from '@clerk/nextjs'
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 interface StripeCheckoutButtonProps {
-  items: any[]
-  buttonText: string
+  items: Array<{
+    priceId: string;
+    quantity?: number;
+  }>;
+  buttonText: string;
 }
 
 export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButtonProps) {
@@ -44,10 +47,19 @@ export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButton
         }),
       })
 
-      const data = await response.json()
+      // Add error logging to help debug the response
+      const responseText = await response.text()
+      console.log('API Response:', responseText)
+
+      let data
+      try {
+        data = JSON.parse(responseText)
+      } catch (e) {
+        throw new Error(`Invalid JSON response: ${responseText}`)
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong')
+        throw new Error(data.error || `HTTP error! status: ${response.status}`)
       }
 
       const stripe = await stripePromise
