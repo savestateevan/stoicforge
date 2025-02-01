@@ -1,7 +1,6 @@
 import { getAuth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { absoluteUrl } from '@/lib/utils'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-12-18.acacia'
