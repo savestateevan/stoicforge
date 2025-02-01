@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import * as React from "react"
-import {  Brain, Calendar, Lightbulb, } from 'lucide-react'
+import {  Brain, Calendar, Lightbulb } from 'lucide-react'
 import Link from "next/link"
 import Footer from "@/components/Footer"
 
