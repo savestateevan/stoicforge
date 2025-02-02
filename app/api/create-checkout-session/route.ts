@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/cancel`,
       metadata: {
         userId: userId,
-        credits: '150',
+        credits: '100',
       }
     });
 

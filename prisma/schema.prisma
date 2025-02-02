@@ -22,7 +22,7 @@ model User {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   credits            Int               @default(0)
-  subscritpion       UserSubscription? @relation
+  subscription       UserSubscription? @relation
   userSubscriptionId String?
   profile            Profile?
   isActiveSubscriber Boolean           @default(false) // New field to indicate active subscription status
