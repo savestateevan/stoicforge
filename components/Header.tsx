@@ -28,6 +28,9 @@ export default function Header() {
                 <Link href="/profile" className="hover:underline">
                   Profile
                 </Link>
+                <Link href="/pricing" className="hover:underline">
+                  Pricing
+                </Link>
               </>
             ) : (
               <>
