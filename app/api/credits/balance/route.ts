@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
           data: {
             id: userId,
             email: `${userId}@example.com`, // Add required email field
-            credits: 0
+            credits: 1
           }
         })
         console.log(`[CREDITS_GET] New user created with 0 credits`)
