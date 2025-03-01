@@ -24,6 +24,12 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
+    console.log("WEBHOOK ENV CHECK:", {
+      webhookSecretDefined: !!process.env.STRIPE_WEBHOOK_SECRET,
+      webhookSecretLength: process.env.STRIPE_WEBHOOK_SECRET?.length,
+      dbConnected: !!db
+    });
+
     event = stripe.webhooks.constructEvent(
       body,
       signature,
