@@ -5,7 +5,10 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, Loader2 } from 'lucide-react'
+import { CheckCircle, Loader2, AlertCircle } from 'lucide-react'
+
+// Check if we're in Stripe test mode
+const isTestMode = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_test_')
 
 function SuccessContent() {
   const searchParams = useSearchParams()
@@ -66,7 +69,19 @@ function SuccessContent() {
       </CardHeader>
       <CardContent>
         {status === 'success' && (
-          <p className="text-center">Your account has been upgraded and credits have been added to your account. You can now access all premium features.</p>
+          <div className="space-y-4">
+            <p className="text-center">Your account has been upgraded and credits have been added to your account. You can now access all premium features.</p>
+            
+            {isTestMode && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md text-amber-700 dark:text-amber-400 text-sm">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <div>
+                  <strong>Test Mode:</strong> This is a test payment. No actual charges were made. 
+                  In a production environment, real payments would be processed.
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </CardContent>
       <CardFooter className="flex justify-center gap-4">
