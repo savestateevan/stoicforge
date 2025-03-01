@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, Loader2 } from 'lucide-react'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -38,53 +38,70 @@ export default function SuccessPage() {
   }, [sessionId])
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="flex items-center justify-center mb-4">
-            {status === 'loading' ? (
-              <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-            ) : status === 'success' ? (
-              <CheckCircle className="w-12 h-12 text-green-500" />
-            ) : (
-              <div className="w-12 h-12 text-red-500">❌</div>
-            )}
-          </div>
-          <CardTitle className="text-2xl font-bold text-center">
-            {status === 'loading' 
-              ? 'Processing Your Payment...' 
-              : status === 'success' 
-                ? 'Payment Successful!' 
-                : 'Payment Issue'}
-          </CardTitle>
-          <CardDescription className="text-center">
-            {status === 'loading' 
-              ? 'Please wait while we confirm your payment' 
-              : status === 'success' 
-                ? 'Thank you for upgrading your plan' 
-                : message}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {status === 'success' && (
-            <p className="text-center">Your account has been upgraded and credits have been added to your account. You can now access all premium features.</p>
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <div className="flex items-center justify-center mb-4">
+          {status === 'loading' ? (
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+          ) : status === 'success' ? (
+            <CheckCircle className="w-12 h-12 text-green-500" />
+          ) : (
+            <div className="w-12 h-12 text-red-500">❌</div>
           )}
-        </CardContent>
-        <CardFooter className="flex justify-center gap-4">
-          {status !== 'loading' && (
-            <>
-              <Button asChild>
-                <Link href="/">Home</Link>
+        </div>
+        <CardTitle className="text-2xl font-bold text-center">
+          {status === 'loading' 
+            ? 'Processing Your Payment...' 
+            : status === 'success' 
+              ? 'Payment Successful!' 
+              : 'Payment Issue'}
+        </CardTitle>
+        <CardDescription className="text-center">
+          {status === 'loading' 
+            ? 'Please wait while we confirm your payment' 
+            : status === 'success' 
+              ? 'Thank you for upgrading your plan' 
+              : message}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {status === 'success' && (
+          <p className="text-center">Your account has been upgraded and credits have been added to your account. You can now access all premium features.</p>
+        )}
+      </CardContent>
+      <CardFooter className="flex justify-center gap-4">
+        {status !== 'loading' && (
+          <>
+            <Button asChild>
+              <Link href="/">Home</Link>
+            </Button>
+            {status === 'success' && (
+              <Button asChild variant="outline">
+                <Link href="/chat">Start Chatting</Link>
               </Button>
-              {status === 'success' && (
-                <Button asChild variant="outline">
-                  <Link href="/chat">Start Chatting</Link>
-                </Button>
-              )}
-            </>
-          )}
-        </CardFooter>
-      </Card>
+            )}
+          </>
+        )}
+      </CardFooter>
+    </Card>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <Suspense fallback={
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex items-center justify-center mb-4">
+              <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">Loading...</CardTitle>
+          </CardHeader>
+        </Card>
+      }>
+        <SuccessContent />
+      </Suspense>
     </div>
   )
 }
