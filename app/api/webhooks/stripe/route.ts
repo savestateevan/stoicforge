@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
       console.log('Line items:', lineItems.data);
       
-      let creditsToAdd = 100; // Default fallback
+      const creditsToAdd = 100; // Default fallback
       // Your logic to determine credits based on the product/price
       
       // Update the user's credits
@@ -141,7 +141,12 @@ export async function POST(req: Request) {
 
     return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (error) {
-    console.error('Webhook error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), { status: 400 });
+    console.error('Webhook error:', error instanceof Error ? error.message : String(error));
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      }), 
+      { status: 400 }
+    );
   }
 }
