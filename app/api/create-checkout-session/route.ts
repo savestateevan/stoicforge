@@ -65,21 +65,31 @@ export async function POST(req: NextRequest) {
     console.log('Success URL:', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`);
     
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
       payment_method_types: ['card'],
       line_items: items.map((item: any) => ({
         price: item.priceId,
         quantity: item.quantity || 1,
       })),
-
-      success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing?canceled=true`,
+      mode: 'subscription',
+      
+      client_reference_id: userId,
       metadata: {
         userId: userId,
         credits: creditsToAdd.toString(),
       },
-      client_reference_id: userId,
-      customer_creation: 'always',
+      
+      billing_address_collection: 'auto',
+      
+      success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing?canceled=true`,
+      
+      subscription_data: {
+        metadata: {
+          userId: userId
+        }
+      },
+      
+      allow_promotion_codes: true,
     });
 
     console.log('Created session:', session.id);
