@@ -70,9 +70,9 @@ export async function POST(req: NextRequest) {
         price: item.priceId,
         quantity: item.quantity || 1,
       })),
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?canceled=true`,
+      mode: 'subscription',
+      success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing?canceled=true`,
       metadata: {
         userId: userId,
         credits: creditsToAdd.toString(),
