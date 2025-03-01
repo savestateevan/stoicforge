@@ -1,9 +1,10 @@
 // components/CreditsDisplay.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react'
+import { StripeCheckoutButton } from '@/components/StripeCheckoutButton'
 
 export function CreditsDisplay() {
   const [credits, setCredits] = useState<number | null>(null)
@@ -12,7 +13,7 @@ export function CreditsDisplay() {
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
 
-  const fetchCredits = async () => {
+  const fetchCredits = useCallback(async () => {
     setError(null)
     try {
       console.log('Fetching credits...')
@@ -51,7 +52,7 @@ export function CreditsDisplay() {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [retryCount])
 
   const handleRefresh = () => {
     setRefreshing(true)
