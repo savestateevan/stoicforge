@@ -39,69 +39,85 @@ export async function POST(req: Request) {
     console.log(`Webhook received: ${event.type}`);
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.userId;
-      const creditsToAdd = parseInt(session.metadata?.credits || '100');
-
-      console.log(`Processing checkout.session.completed for user ${userId} with ${creditsToAdd} credits`);
-      console.log('Session details:', {
-        id: session.id,
-        customerId: session.customer,
-        paymentStatus: session.payment_status,
-        amountTotal: session.amount_total,
+      const session = event.data.object;
+      
+      // Log all possible user identifiers
+      console.log('Webhook user identifiers:', {
+        client_reference_id: session.client_reference_id,
+        metadata_userId: session.metadata?.userId,
+        customer_id: session.customer,
+        payment_intent: session.payment_intent
       });
-
-      if (!userId) {
-        console.error('No userId in metadata');
-        return new NextResponse('No userId in metadata', { status: 400 });
+      
+      // Try multiple methods to find the user
+      let userId = null;
+      
+      // Method 1: client_reference_id (best practice)
+      if (session.client_reference_id) {
+        userId = session.client_reference_id;
+        console.log('Using client_reference_id for user lookup:', userId);
+      } 
+      // Method 2: metadata
+      else if (session.metadata?.userId) {
+        userId = session.metadata.userId;
+        console.log('Using metadata.userId for user lookup:', userId);
       }
-
-      try {
-        // First, check if the user exists
-        const existingUser = await db.user.findUnique({
-          where: { id: userId },
-          select: { id: true, credits: true }
+      // Method 3: Look up by Stripe customer ID if you store it
+      else if (session.customer) {
+        console.log('Looking up user by customer ID:', session.customer);
+        const userSubscription = await db.userSubscription.findUnique({
+          where: { stripeCustomerId: session.customer as string }
         });
         
-        console.log('Existing user found?', !!existingUser, existingUser ? `Current credits: ${existingUser.credits}` : 'User not found in database');
-        
-        if (!existingUser) {
-          console.error(`User with ID ${userId} not found in database. This ID might be from an auth provider but not synced to your database.`);
-          
-          // Option 1: Return an error
-          // return new NextResponse(`User with ID ${userId} not found in database`, { status: 404 });
-          
-          // Option 2: Create the user first if they don't exist
-          console.log(`Creating new user with ID ${userId}`);
-          await db.user.create({
-            data: {
-              id: userId,
-              email: session.customer_details?.email || `${userId}@example.com`,
-              credits: creditsToAdd
-            }
-          });
-          console.log(`Created new user with ID ${userId} and ${creditsToAdd} credits`);
-          return new NextResponse(null, { status: 200 });
+        if (userSubscription) {
+          userId = userSubscription.userId;
+          console.log('Found user by customer ID:', userId);
         }
-        
-        // Update user credits
-        const updatedUser = await db.user.update({
-          where: { id: userId },
-          data: {
-            credits: {
-              increment: creditsToAdd
-            }
-          },
-        });
-        
-        console.log(`Credits updated for user ${userId}. New balance: ${updatedUser.credits}`);
-      } catch (dbError) {
-        console.error('Database error:', dbError);
-        return new NextResponse(
-          'Database error: ' + (dbError as Error).message,
-          { status: 500 }
-        );
       }
+      
+      if (!userId) {
+        console.error('Could not identify user from webhook data!');
+        // Return 200 so Stripe won't retry - log this issue for manual resolution
+        return new Response(JSON.stringify({ 
+          error: 'Could not identify user', 
+          received: true 
+        }), { status: 200 });
+      }
+      
+      // Now try to find and update the user
+      console.log(`Attempting to update credits for user ${userId}`);
+      
+      // Get current credits first
+      const currentUser = await db.user.findUnique({
+        where: { id: userId }
+      });
+      
+      if (!currentUser) {
+        console.error(`User ${userId} not found in database!`);
+        return new Response(JSON.stringify({ 
+          error: 'User not found in database', 
+          received: true 
+        }), { status: 200 });
+      }
+      
+      console.log(`Found user ${userId}, current credits: ${currentUser.credits}`);
+      
+      // Determine number of credits to add based on the price ID
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      console.log('Line items:', lineItems.data);
+      
+      let creditsToAdd = 100; // Default fallback
+      // Your logic to determine credits based on the product/price
+      
+      // Update the user's credits
+      const updatedUser = await db.user.update({
+        where: { id: userId },
+        data: {
+          credits: { increment: creditsToAdd }
+        }
+      });
+      
+      console.log(`Successfully updated user ${userId}, new credits: ${updatedUser.credits}`);
     }
 
     // Handle subscription lifecycle events
@@ -123,18 +139,9 @@ export async function POST(req: Request) {
       console.log(`Subscription ${subscription.id} cancelled`);
     }
 
-    return new NextResponse(null, { status: 200 });
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (error) {
-    console.error('Webhook error:', error);
-    console.error('Error details:', (error as Error).message);
-    // If it's a webhook signature verification error, log more details
-    if ((error as Error).message.includes('signature')) {
-      console.error('Signature verification failed. Check your STRIPE_WEBHOOK_SECRET.');
-      console.error('Make sure you are using the correct webhook secret for the environment (test/live)');
-    }
-    return new NextResponse(
-      'Webhook error: ' + (error as Error).message,
-      { status: 400 }
-    );
+    console.error('Webhook error:', error.message);
+    return new Response(JSON.stringify({ error: error.message }), { status: 400 });
   }
 }

@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
         userId: userId,
         credits: creditsToAdd.toString(),
       },
-      // Store the customer in Stripe
-      // customer_creation: 'always',
+      client_reference_id: userId,
+      customer_creation: 'always',
     });
 
     console.log('Created session:', session.id);
