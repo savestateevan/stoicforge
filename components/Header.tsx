@@ -1,32 +1,49 @@
+// components/Header.tsx
 'use client'
 
-import { GraduationCap } from "lucide-react";
-import Link from "next/link";
-import { ModeToggle } from "./ModeToggle";
-import { AuthButtons } from "./auth/AuthButtons";
-import { Credits } from './Credits'
+import Link from 'next/link'
+import { UserButton, useAuth } from '@clerk/nextjs'
+import { ModeToggle } from './ModeToggle'
+import { CreditsDisplay } from './Credits'
 
 export default function Header() {
+  const { isSignedIn } = useAuth()
+
   return (
-    <header className="px-4 lg:px-6 h-14 flex items-center">
-      <Link className="flex items-center justify-center" href="/">
-        <GraduationCap className="h-6 w-6" />
-        <span className="sr-only">StoicForge</span>
-      </Link>
-      <nav className="ml-auto flex items-center gap-4 sm:gap-6">
-        <Credits />
-        <Link className="text-sm font-medium hover:underline underline-offset-4" href="/pricing">
-          Pricing
+    <header className="border-b">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <Link href="/" className="font-bold text-xl">
+          StoicForge
         </Link>
-        <Link className="text-sm font-medium hover:underline underline-offset-4" href="/chat">
-          Chat
-        </Link>
-        <Link className="text-sm font-medium hover:underline underline-offset-4" href="/profile">
-          Profile
-        </Link>
-        <AuthButtons />
-        <ModeToggle />
-      </nav>
+        
+        <div className="flex items-center gap-4">
+          {isSignedIn && <CreditsDisplay />}
+          
+          <nav className="flex items-center gap-4">
+            {isSignedIn ? (
+              <>
+                <Link href="/chat" className="hover:underline">
+                  Chat
+                </Link>
+                <Link href="/profile" className="hover:underline">
+                  Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/sign-in" className="hover:underline">
+                  Sign in
+                </Link>
+                <Link href="/sign-up" className="hover:underline">
+                  Sign up
+                </Link>
+              </>
+            )}
+            <ModeToggle />
+            {isSignedIn && <UserButton afterSignOutUrl="/" />}
+          </nav>
+        </div>
+      </div>
     </header>
-  );
+  )
 }

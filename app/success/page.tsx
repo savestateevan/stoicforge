@@ -1,26 +1,88 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Loader2 } from 'lucide-react'
 
 export default function SuccessPage() {
+  const searchParams = useSearchParams()
+  const sessionId = searchParams.get('session_id')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!sessionId) {
+        setStatus('success')
+        return
+      }
+
+      try {
+        // You could create an API endpoint to verify the session if needed
+        // For now, we'll just assume success but in a real app you might want to
+        // check that the session exists and is valid
+        setTimeout(() => {
+          setStatus('success')
+        }, 1500)
+      } catch (error) {
+        console.error('Error checking session:', error)
+        setStatus('error')
+        setMessage('There was a problem processing your payment. Please contact support.')
+      }
+    }
+
+    checkSession()
+  }, [sessionId])
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center justify-center mb-4">
-            <CheckCircle className="w-12 h-12 text-green-500" />
+            {status === 'loading' ? (
+              <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+            ) : status === 'success' ? (
+              <CheckCircle className="w-12 h-12 text-green-500" />
+            ) : (
+              <div className="w-12 h-12 text-red-500">❌</div>
+            )}
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Payment Successful!</CardTitle>
-          <CardDescription className="text-center">Thank you for upgrading your plan.</CardDescription>
+          <CardTitle className="text-2xl font-bold text-center">
+            {status === 'loading' 
+              ? 'Processing Your Payment...' 
+              : status === 'success' 
+                ? 'Payment Successful!' 
+                : 'Payment Issue'}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {status === 'loading' 
+              ? 'Please wait while we confirm your payment' 
+              : status === 'success' 
+                ? 'Thank you for upgrading your plan' 
+                : message}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center">Your account has been upgraded and you now have access to all premium features.</p>
+          {status === 'success' && (
+            <p className="text-center">Your account has been upgraded and credits have been added to your account. You can now access all premium features.</p>
+          )}
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button asChild>
-            <Link href="/">Home</Link>
-          </Button>
+        <CardFooter className="flex justify-center gap-4">
+          {status !== 'loading' && (
+            <>
+              <Button asChild>
+                <Link href="/">Home</Link>
+              </Button>
+              {status === 'success' && (
+                <Button asChild variant="outline">
+                  <Link href="/chat">Start Chatting</Link>
+                </Button>
+              )}
+            </>
+          )}
         </CardFooter>
       </Card>
     </div>

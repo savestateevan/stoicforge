@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider     = "mysql"
@@ -10,105 +8,92 @@ datasource db {
   relationMode = "prisma"
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
   id                 String            @id
   email              String            @unique
   name               String?
-  prompts            Prompt[]
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   credits            Int               @default(0)
-  subscription       UserSubscription? @relation
   userSubscriptionId String?
+  isActiveSubscriber Boolean           @default(false)
+  subscriptionType   SubscriptionType?
+  prompts            Prompt[]
+  subscription       UserSubscription? @relation
   profile            Profile?
-  isActiveSubscriber Boolean           @default(false) // New field to indicate active subscription status
-  subscriptionType   SubscriptionType? // New field for subscription type
-  studySessions    StudySession[]
-  tasks           Task[]
-  studyMaterials  StudyMaterial[]
-  progress        UserProgress?
-  messages        Message[]
-}
-
-enum SubscriptionType {
-  FREE
-  BEGINNER
-  PRO
-  LEGACY // Represents users who subscribed under the old unlimited plan
+  studySessions      StudySession[]
+  tasks              Task[]
+  studyMaterials     StudyMaterial[]
+  progress           UserProgress?
+  messages           Message[]
 }
 
 model Profile {
-  id                     String  @id @default(uuid())
-  userId                 String  @unique
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
   name                   String?
-  imageUrl               String? @db.Text
-  email                  String? @db.Text
-  bio                    String? @db.Text
-  twitch                 String? @db.Text
-  youtube                String? @db.Text
-  instagram              String? @db.Text
-  twitter                String? @db.Text
-  status                 String? @default("active")
-  isPublic               Boolean @default(false)
-  stripeConnectAccountId String? // Add this line
+  imageUrl               String?  @db.Text
+  email                  String?  @db.Text
+  bio                    String?  @db.Text
+  twitch                 String?  @db.Text
+  youtube                String?  @db.Text
+  instagram              String?  @db.Text
+  twitter                String?  @db.Text
+  status                 String?  @default("active")
+  isPublic               Boolean  @default(false)
+  stripeConnectAccountId String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
   credits                Int      @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User? @relation(fields: [userId], references: [id])
+  user                   User?    @relation(fields: [userId], references: [id])
 }
 
 model Prompt {
   id         String    @id @default(cuid())
   content    String    @db.Text
   framework  Framework
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
   isArchived Boolean   @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model StudySession {
-  id        String   @id @default(cuid())
-  userId    String
-  subject   String
-  hours     Float
-  date      DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  id      String   @id @default(cuid())
+  userId  String
+  subject String
+  hours   Float
+  date    DateTime @default(now())
+  user    User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String
-  completed   Boolean  @default(false)
-  dueDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id])
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  completed Boolean   @default(false)
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model StudyMaterial {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String
-  type        String   // e.g., "Math Formulas", "Timeline", "Experiment Guide"
-  content     String   @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  type      String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
@@ -124,15 +109,15 @@ model UserProgress {
 model UserSubscription {
   id                     String    @id @default(cuid())
   userId                 String    @unique
-  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
-  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
-  stripePriceId          String?   @map(name: "stripe_price_id")
-  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
+  stripeCustomerId       String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map("stripe_subscription_id")
+  stripePriceId          String?   @map("stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map("stripe_current_period_end")
   createdAt              DateTime  @default(now())
   updatedAt              DateTime? @updatedAt
   name                   String?
   email                  String?
-  credits                Int       @default(100) // New credits field
+  credits                Int       @default(100)
   user                   User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -142,14 +127,6 @@ model UserApiLimit {
   count     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-enum Framework {
-  RTF
-  TAG
-  BAB
-  CARE
-  RISE
 }
 
 model Message {
@@ -162,4 +139,19 @@ model Message {
   user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+enum SubscriptionType {
+  FREE
+  BEGINNER
+  PRO
+  LEGACY
+}
+
+enum Framework {
+  RTF
+  TAG
+  BAB
+  CARE
+  RISE
 }

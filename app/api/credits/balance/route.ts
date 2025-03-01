@@ -10,18 +10,24 @@ export async function GET(req: NextRequest) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { credits: true }
-    })
+    try {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { credits: true }
+      })
 
-    if (!user) {
-      return new NextResponse("User not found", { status: 404 })
+      if (!user) {
+        console.error(`[CREDITS_GET] User not found: ${userId}`)
+        return new NextResponse("User not found", { status: 404 })
+      }
+
+      return NextResponse.json({ credits: user.credits })
+    } catch (dbError) {
+      console.error('[CREDITS_GET] Database error:', dbError)
+      return new NextResponse("Database error", { status: 500 })
     }
-
-    return NextResponse.json({ credits: user.credits })
   } catch (error) {
-    console.error('[CREDITS_GET]', error)
+    console.error('[CREDITS_GET] Unexpected error:', error)
     return new NextResponse("Internal error", { status: 500 })
   }
-} 
+}
