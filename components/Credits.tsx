@@ -61,7 +61,7 @@ export function CreditsDisplay() {
 
   useEffect(() => {
     fetchCredits()
-  }, [])
+  }, [fetchCredits])
 
   return (
     <div className="flex items-center gap-2">
