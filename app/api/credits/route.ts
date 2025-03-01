@@ -4,7 +4,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    const authResult = await auth();
+    const userId = authResult.userId;
     
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -20,6 +21,7 @@ export async function GET() {
       const newUser = await db.user.create({
         data: {
           id: userId,
+          email: userId, // Adding required email field
           credits: 0
         }
       });
