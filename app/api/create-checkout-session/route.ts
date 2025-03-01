@@ -23,8 +23,8 @@ const TEST_PRICES = {
 const PLAN_CREDITS = {
   [TEST_PRICES.BEGINNER]: 100, // Beginner plan (test)
   [TEST_PRICES.PRO]: 250,      // Pro plan (test)
-  'price_1QxhZBISdNa3NclOyo8PTgKN': 100, // Beginner plan
-  'price_1QxhaQISdNa3NclOFTVFaH7p': 250  // Pro plan
+  'price_1QaoC5ISdNa3NclOt5MQPbR3': 100, // Beginner plan
+  'price_1QaojPISdNa3NclOEL5MFFsA': 250  // Pro plan
 }
 
 export async function POST(req: NextRequest) {
@@ -65,12 +65,13 @@ export async function POST(req: NextRequest) {
     console.log('Success URL:', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`);
     
     const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
       payment_method_types: ['card'],
       line_items: items.map((item: any) => ({
         price: item.priceId,
         quantity: item.quantity || 1,
       })),
-      mode: 'subscription',
+
       success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing?canceled=true`,
       metadata: {
