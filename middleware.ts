@@ -1,13 +1,18 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-const isProtectedRoute = createRouteMatcher(['/chat(.*)', '/profile(.*)'])
+const isProtectedRoute = createRouteMatcher([
+  '/chat(.*)', 
+  '/profile(.*)',
+  '/api/credits(.*)', // Explicitly protect credits API routes
+  '/api/create-checkout-session(.*)'
+])
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth()
 
   if (!userId && isProtectedRoute(req)) {
     // Add custom logic to run before redirecting
-
+    console.log(`Unauthorized access attempted to: ${req.url}`)
     return redirectToSignIn()
   }
 })
