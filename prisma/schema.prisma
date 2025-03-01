@@ -6,6 +6,8 @@ datasource db {
   provider     = "mysql"
   url          = env("DATABASE_URL")
   relationMode = "prisma"
+  // Note: Connection pooling should be configured at the application level
+  // For PlanetScale, see: https://planetscale.com/docs/tutorials/connect-nextjs-app
 }
 
 model User {
