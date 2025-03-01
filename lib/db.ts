@@ -16,4 +16,6 @@ if (process.env.NODE_ENV === "production") {
   db = global.cachedPrisma
 }
 
-if (process.env.NODE_ENV !== "production") globalThis.prisma = db 
+if (process.env.NODE_ENV !== "production") {
+  (globalThis as any).prisma = db
+}
