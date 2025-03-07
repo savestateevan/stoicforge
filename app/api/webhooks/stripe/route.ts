@@ -71,7 +71,27 @@ export async function POST(req: Request) {
         return new Response('Database error while checking user', { status: 500 });
       }
 
-      const creditsToAdd = parseInt(session.metadata?.credits || '0', 10);
+      // Parse credits carefully to avoid NaN issues
+      let creditsToAdd = 0;
+      try {
+        if (session.metadata?.credits) {
+          const parsed = parseInt(session.metadata.credits, 10);
+          if (!isNaN(parsed) && parsed > 0) {
+            creditsToAdd = parsed;
+          } else {
+            // Fallback based on plan if the credits value is invalid
+            creditsToAdd = session.metadata?.plan === 'PRO' ? 250 : 100;
+          }
+        } else {
+          // Fallback based on price ID if no credits specified
+          creditsToAdd = session.metadata?.priceId?.includes('QaojP') ? 250 : 100;
+        }
+      } catch (parseError) {
+        console.error('💰 STRIPE WEBHOOK ERROR: Failed to parse credits:', parseError);
+        // Default to 100 credits if parsing fails
+        creditsToAdd = 100;
+      }
+      
       console.log(`💰 STRIPE WEBHOOK: Adding ${creditsToAdd} credits to user ${userId}`);
 
       try {

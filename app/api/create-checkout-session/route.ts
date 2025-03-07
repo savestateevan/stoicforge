@@ -15,8 +15,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Define test prices for local development
 // Make sure these match the price IDs in app/pricing/page.tsx
 const TEST_PRICES = {
-  BEGINNER: 'price_1QxhZBISdNa3NclOyo8PTgKN', // Beginner Plan
-  PRO: 'price_1QxhaQISdNa3NclOFTVFaH7p'       // Pro Plan
+  BEGINNER: 'price_1QaoC5ISdNa3NclOt5MQPbR3', // Beginner Plan
+  PRO: 'price_1QaojPISdNa3NclOEL5MFFsA'       // Pro Plan
 }
 
 // Define credits for each plan

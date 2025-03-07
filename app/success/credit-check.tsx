@@ -71,6 +71,50 @@ export function CreditVerifier() {
     return () => clearInterval(interval)
   }, [])
 
+  // Add a debugging section with more detailed information
+  useEffect(() => {
+    // Add webhook debug info polling if credits don't update
+    if (checkCount >= 5 && !creditsUpdated) {
+      console.log('[Credit Check] Starting webhook debug check...')
+      
+      // Fetch webhook debug info
+      fetch('/api/webhooks/stripe/debug')
+        .then(response => response.json())
+        .then(data => {
+          console.log('[Credit Check] Webhook debug info:', data)
+        })
+        .catch(error => {
+          console.error('[Credit Check] Error fetching webhook debug info:', error)
+        })
+    }
+  }, [checkCount, creditsUpdated])
+
+  // Add a manual trigger for updating credits
+  const handleForceCredit = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/test/credit-update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ creditsToAdd: 100 }),
+      })
+      
+      if (!response.ok) throw new Error('Failed to force credit update')
+      
+      const data = await response.json()
+      console.log('[Credit Check] Forced credit update:', data)
+      
+      // Refresh credits after force update
+      fetchCredits()
+    } catch (error) {
+      console.error('[Credit Check] Error forcing credit update:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Card className="mt-8 w-full max-w-md">
       <CardHeader>
@@ -108,10 +152,21 @@ export function CreditVerifier() {
                 Credits may take a few minutes to update. Please check back later.
               </div>
             )}
+            
+            {!creditsUpdated && checkCount >= 5 && (
+              <Button 
+                onClick={handleForceCredit} 
+                disabled={loading}
+                className="w-full mt-4"
+                variant="secondary"
+              >
+                Force Credit Update
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         <Button 
           onClick={handleManualCheck} 
           disabled={loading}
@@ -121,6 +176,17 @@ export function CreditVerifier() {
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Check Credits Now
         </Button>
+        
+        <div className="w-full text-xs text-gray-500 mt-2">
+          <details>
+            <summary className="cursor-pointer">Debug Info</summary>
+            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">
+              <p>Session ID: {typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('session_id') : 'N/A'}</p>
+              <p>Checks: {checkCount}</p>
+              <p>Last Check: {new Date().toISOString()}</p>
+            </div>
+          </details>
+        </div>
       </CardFooter>
     </Card>
   )
