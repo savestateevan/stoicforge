@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react'
-import { StripeCheckoutButton } from '@/components/StripeCheckoutButton'
 
 export function CreditsDisplay() {
   const [credits, setCredits] = useState<number | null>(null)
@@ -12,18 +11,22 @@ export function CreditsDisplay() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
   const fetchCredits = useCallback(async () => {
     setError(null)
     try {
-      console.log('Fetching credits...')
+      console.log('Fetching credits...', new Date().toISOString())
       const response = await fetch('/api/credits/balance', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // Include credentials to ensure cookies are sent
-          credentials: 'include'
-        }
+          // Add cache busting parameter
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+        // Ensure we're not using cached data 
+        cache: 'no-store'
       })
       
       console.log('Credits API response status:', response.status)
@@ -36,7 +39,14 @@ export function CreditsDisplay() {
       
       const data = await response.json()
       console.log('Credits fetched successfully:', data)
+      
+      // Check if credits changed from previous value
+      if (data.credits !== credits) {
+        console.log(`Credits changed from ${credits} to ${data.credits}`)
+      }
+      
       setCredits(data.credits)
+      setLastUpdated(new Date())
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('Error fetching credits:', errorMessage)
@@ -52,7 +62,7 @@ export function CreditsDisplay() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [retryCount])
+  }, [retryCount, credits])
 
   const handleRefresh = () => {
     setRefreshing(true)
@@ -60,9 +70,47 @@ export function CreditsDisplay() {
     fetchCredits()
   }
 
+  // Initial fetch on mount
   useEffect(() => {
     fetchCredits()
-  }, [fetchCredits])
+  }, []) // Intentionally removing fetchCredits from dependency array to prevent loops
+
+  // Poll for credits periodically in production
+  useEffect(() => {
+    // Only set up polling if successfully loaded initially
+    if (credits !== null) {
+      const pollInterval = setInterval(() => {
+        console.log('Polling for credits update...')
+        fetchCredits()
+      }, 30000) // Check every 30 seconds
+      
+      return () => clearInterval(pollInterval)
+    }
+  }, [credits]) // Poll when credits are initially loaded
+
+  // Check for URL success parameter
+  useEffect(() => {
+    // Check if we're on the successful checkout page
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.get('success') === 'true') {
+        console.log('Detected successful checkout, refreshing credits...')
+        // Force an immediate refresh after successful payment
+        handleRefresh()
+        
+        // Set up more frequent polling temporarily
+        const successPollInterval = setInterval(() => {
+          console.log('Post-success polling for credits update...')
+          fetchCredits()
+        }, 5000) // Check every 5 seconds after success
+        
+        // Clear the more frequent polling after 60 seconds
+        setTimeout(() => {
+          clearInterval(successPollInterval)
+        }, 60000)
+      }
+    }
+  }, []) // Run once on mount
 
   return (
     <div className="flex items-center gap-2">
@@ -91,6 +139,7 @@ export function CreditsDisplay() {
         onClick={handleRefresh} 
         disabled={refreshing}
         className="h-8 w-8"
+        title={`Last updated: ${lastUpdated.toLocaleTimeString()}`}
       >
         <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
         <span className="sr-only">Refresh credits</span>

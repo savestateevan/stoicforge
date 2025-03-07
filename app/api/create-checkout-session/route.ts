@@ -76,23 +76,27 @@ export async function POST(req: NextRequest) {
       metadata: {
         userId: userId,
         credits: creditsToAdd.toString(),
+        priceId: items[0]?.priceId,
+        plan: items[0]?.priceId === TEST_PRICES.BEGINNER ? 'BEGINNER' : 'PRO',
+        source: 'stoicforge-checkout'
       },
       
       billing_address_collection: 'auto',
       
-      success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
+      success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing?canceled=true`,
       
       subscription_data: {
         metadata: {
-          userId: userId
+          userId: userId,
+          source: 'stoicforge-subscription'
         }
       },
       
       allow_promotion_codes: true,
     });
 
-    console.log('Created session:', session.id);
+    console.log('Created session:', session.id, 'with metadata:', session.metadata);
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {
     console.error('Error creating checkout session:', error);
