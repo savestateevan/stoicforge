@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, RefreshCw } from 'lucide-react'
+import { Loader2, RefreshCw, CheckCircle } from 'lucide-react'
 
 export function CreditVerifier() {
   const [initialCredits, setInitialCredits] = useState<number | null>(null)
@@ -116,40 +116,52 @@ export function CreditVerifier() {
   }
 
   return (
-    <Card className="mt-8 w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="text-lg">Credit Update Verification</CardTitle>
+    <Card className="mt-4 sm:mt-8 w-full max-w-md shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base sm:text-lg flex items-center">
+          <span>Credit Update Verification</span>
+          {creditsUpdated && (
+            <span className="ml-2 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-0.5 rounded-full">
+              Complete
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-3">
         {loading ? (
           <div className="flex justify-center py-4">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-sm">Initial Credits:</div>
-              <div className="font-medium">{initialCredits}</div>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div className="text-gray-500 dark:text-gray-400">Initial Credits:</div>
+              <div className="font-medium text-right">{initialCredits}</div>
               
-              <div className="text-sm">Current Credits:</div>
-              <div className="font-medium">{currentCredits}</div>
+              <div className="text-gray-500 dark:text-gray-400">Current Credits:</div>
+              <div className="font-medium text-right">{currentCredits}</div>
               
-              <div className="text-sm">Status:</div>
-              <div className="font-medium">
+              <div className="text-gray-500 dark:text-gray-400">Status:</div>
+              <div className="font-medium text-right">
                 {creditsUpdated ? (
-                  <span className="text-green-600">Credits Updated ✓</span>
+                  <span className="text-green-600 dark:text-green-400 flex items-center justify-end">
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Updated
+                  </span>
                 ) : (
-                  <span className="text-amber-600">Pending Update...</span>
+                  <span className="text-amber-600 dark:text-amber-400 animate-pulse">
+                    Pending...
+                  </span>
                 )}
               </div>
               
-              <div className="text-sm">Checks:</div>
-              <div className="font-medium">{checkCount}</div>
+              <div className="text-gray-500 dark:text-gray-400">Checks:</div>
+              <div className="font-medium text-right">{checkCount}</div>
             </div>
             
             {!creditsUpdated && checkCount >= 10 && (
-              <div className="text-sm text-amber-600 pt-2">
-                Credits may take a few minutes to update. Please check back later.
+              <div className="text-xs sm:text-sm text-amber-600 dark:text-amber-400 pt-1 border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
+                Credits may take a few minutes to update. Please check your credits on the main page.
               </div>
             )}
             
@@ -157,7 +169,7 @@ export function CreditVerifier() {
               <Button 
                 onClick={handleForceCredit} 
                 disabled={loading}
-                className="w-full mt-4"
+                className="w-full mt-3 py-1 h-8 text-xs sm:text-sm sm:h-9"
                 variant="secondary"
               >
                 Force Credit Update
@@ -166,22 +178,24 @@ export function CreditVerifier() {
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col gap-2">
+      <CardFooter className="flex flex-col gap-2 pt-1 pb-4 px-4 sm:px-6">
         <Button 
           onClick={handleManualCheck} 
           disabled={loading}
-          className="w-full"
+          className="w-full h-8 text-xs sm:text-sm py-1 sm:h-9"
           variant="outline"
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
           Check Credits Now
         </Button>
         
-        <div className="w-full text-xs text-gray-500 mt-2">
+        <div className="w-full text-xs text-gray-500 mt-1">
           <details>
-            <summary className="cursor-pointer">Debug Info</summary>
-            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">
-              <p>Session ID: {typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('session_id') : 'N/A'}</p>
+            <summary className="cursor-pointer text-2xs sm:text-xs hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+              Debug Info
+            </summary>
+            <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded text-2xs sm:text-xs font-mono overflow-x-auto">
+              <p className="truncate">Session ID: {typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('session_id') : 'N/A'}</p>
               <p>Checks: {checkCount}</p>
               <p>Last Check: {new Date().toISOString()}</p>
             </div>

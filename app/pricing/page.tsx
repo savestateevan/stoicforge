@@ -37,38 +37,43 @@ const pricingPlans = [
 
 export default function PricingPage() {
   return (
-    <div className="container mx-auto">
-      <div className="flex justify-end">
-        <Link href="/">
-          <Button variant="outline" className="flex items-center gap-2">
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold sm:hidden">Pricing</h1>
+        <Link href="/" className="ml-auto">
+          <Button variant="outline" className="flex items-center gap-2 text-sm">
             <ArrowLeft className="h-4 w-4" />
-            Home
+            <span>Home</span>
           </Button>
         </Link>
       </div>
-      <main className="flex-1 p-4 md:p-6">
+      <main className="flex-1">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Choose Your Plan</h2>
-          <div className="grid md:grid-cols-2 gap-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">Choose Your Plan</h2>
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {pricingPlans.map((plan) => (
-              <Card key={plan.name} className="flex flex-col">
-                <CardHeader>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
+              <Card key={plan.name} className="flex flex-col h-full shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl sm:text-2xl">{plan.name}</CardTitle>
+                  <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1">
-                  <p className="text-3xl font-bold mb-4">{plan.price}<span className="text-sm font-normal">/month</span></p>
+                <CardContent className="flex-1 pb-2">
+                  <p className="text-2xl sm:text-3xl font-bold mb-4">{plan.price}<span className="text-sm font-normal">/month</span></p>
                   <ul className="space-y-2">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center">
-                        <Check className="mr-2 h-4 w-4 text-green-500" />
-                        {feature}
+                      <li key={index} className="flex items-start">
+                        <Check className="mr-2 h-4 w-4 mt-1 text-green-500 flex-shrink-0" />
+                        <span className="text-sm sm:text-base">{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter>
-                  <StripeCheckoutButton items={[{ priceId: plan.stripePriceId, quantity: 1 }]} buttonText={`Subscribe to ${plan.name}`} />
+                <CardFooter className="pt-2">
+                  <StripeCheckoutButton 
+                    items={[{ priceId: plan.stripePriceId, quantity: 1 }]} 
+                    buttonText={`Subscribe to ${plan.name}`}
+                    className="w-full text-sm sm:text-base py-2"
+                  />
                 </CardFooter>
               </Card>
             ))}

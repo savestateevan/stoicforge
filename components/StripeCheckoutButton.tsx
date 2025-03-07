@@ -20,9 +20,10 @@ interface StripeCheckoutButtonProps {
     quantity?: number;
   }>;
   buttonText: string;
+  className?: string;
 }
 
-export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButtonProps) {
+export function StripeCheckoutButton({ items, buttonText, className }: StripeCheckoutButtonProps) {
   const { user } = useUser()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -109,7 +110,11 @@ export function StripeCheckoutButton({ items, buttonText }: StripeCheckoutButton
   
   return (
     <div className="flex flex-col items-center gap-2">
-      <Button onClick={handleCheckout} disabled={isLoading} className="w-full">
+      <Button 
+        onClick={handleCheckout} 
+        disabled={isLoading} 
+        className={`w-full ${className || ''}`}
+      >
         {isLoading ? 'Loading...' : buttonText}
       </Button>
       {isTestMode && (
