@@ -1,6 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
 const isProtectedRoute = createRouteMatcher([
   '/chat(.*)', 
@@ -26,16 +24,4 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-}
-
-export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname
-  
-  // Skip processing for webhook paths
-  if (path.startsWith('/api/webhooks/')) {
-    return NextResponse.next()
-  }
-  
-  // Your other middleware logic here
-  // ...
 }
