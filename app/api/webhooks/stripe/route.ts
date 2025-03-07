@@ -37,16 +37,23 @@ export async function POST(req: Request) {
 
     console.log(`💰 STRIPE WEBHOOK: Event constructed successfully: ${event.type} (${event.id})`);
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      console.log('💰 STRIPE WEBHOOK: Checkout session completed', {
-        sessionId: session.id,
+    // Handle various checkout and subscription events that should add credits
+    if (event.type === 'checkout.session.completed' || 
+        event.type === 'customer.subscription.created') {
+      
+      // Get the appropriate object based on event type
+      const session = event.data.object as any;
+      console.log(`💰 STRIPE WEBHOOK: Processing ${event.type}`, {
+        id: session.id,
         customer: session.customer,
-        subscription: session.subscription,
+        subscription: session.subscription || session.id,
         metadata: session.metadata
       });
 
-      const userId = session.metadata?.userId || session.client_reference_id;
+      // Extract user ID from metadata or client reference
+      const userId = session.metadata?.userId || 
+                    session.client_reference_id || 
+                    (session.customer ? await findUserIdFromCustomer(session.customer as string) : null);
 
       if (!userId) {
         console.error('💰 STRIPE WEBHOOK ERROR: Could not identify user from webhook data!');
@@ -73,23 +80,51 @@ export async function POST(req: Request) {
 
       // Parse credits carefully to avoid NaN issues
       let creditsToAdd = 0;
+      let planType = '';
+      
       try {
+        // First try to get directly from metadata
         if (session.metadata?.credits) {
           const parsed = parseInt(session.metadata.credits, 10);
           if (!isNaN(parsed) && parsed > 0) {
             creditsToAdd = parsed;
-          } else {
-            // Fallback based on plan if the credits value is invalid
-            creditsToAdd = session.metadata?.plan === 'PRO' ? 250 : 100;
+            console.log(`💰 STRIPE WEBHOOK: Using credits from metadata: ${creditsToAdd}`);
           }
-        } else {
-          // Fallback based on price ID if no credits specified
-          creditsToAdd = session.metadata?.priceId?.includes('QaojP') ? 250 : 100;
+        }
+        
+        // If we couldn't get credits from metadata, try to determine from the plan/price
+        if (creditsToAdd <= 0) {
+          // Try to get plan info
+          if (session.metadata?.plan) {
+            planType = session.metadata.plan.toUpperCase();
+          } else if (session.metadata?.priceId) {
+            // Check price ID patterns
+            planType = session.metadata.priceId.includes('QaojP') ? 'PRO' : 'BEGINNER';
+          } else if (session.line_items?.data?.[0]?.price?.id) {
+            // Try to extract from line items if available
+            const priceId = session.line_items.data[0].price.id;
+            planType = priceId.includes('QaojP') ? 'PRO' : 'BEGINNER';
+          } else if (event.type === 'customer.subscription.created' && session.items?.data?.[0]?.price?.id) {
+            // For subscription events
+            const priceId = session.items.data[0].price.id;
+            planType = priceId.includes('QaojP') ? 'PRO' : 'BEGINNER';
+          }
+          
+          // Set credits based on plan type
+          creditsToAdd = planType === 'PRO' ? 250 : 100;
+          console.log(`💰 STRIPE WEBHOOK: Using credits based on plan type (${planType}): ${creditsToAdd}`);
         }
       } catch (parseError) {
         console.error('💰 STRIPE WEBHOOK ERROR: Failed to parse credits:', parseError);
         // Default to 100 credits if parsing fails
         creditsToAdd = 100;
+        console.log(`💰 STRIPE WEBHOOK: Using default credits: ${creditsToAdd}`);
+      }
+      
+      // Force minimum credits to avoid 0 credit updates
+      if (creditsToAdd <= 0) {
+        creditsToAdd = 100;
+        console.log(`💰 STRIPE WEBHOOK: Forcing minimum credits: ${creditsToAdd}`);
       }
       
       console.log(`💰 STRIPE WEBHOOK: Adding ${creditsToAdd} credits to user ${userId}`);
@@ -105,6 +140,7 @@ export async function POST(req: Request) {
         
         console.log(`💰 STRIPE WEBHOOK: Updated user credits`, {
           userId,
+          previousCredits: userUpdate.credits - creditsToAdd,
           newCreditBalance: userUpdate.credits,
           added: creditsToAdd
         });
@@ -149,9 +185,8 @@ export async function POST(req: Request) {
       console.log(`💰 STRIPE WEBHOOK: Credits updated successfully for user ${userId}`);
     }
 
-    // Additional event handlers with better logging...
-    if (event.type === 'customer.subscription.created' || 
-        event.type === 'customer.subscription.updated') {
+    // Handle subscription-specific events
+    if (event.type === 'customer.subscription.updated') {
       const subscription = event.data.object as Stripe.Subscription;
       console.log(`💰 STRIPE WEBHOOK: Subscription ${event.type}`, {
         subscriptionId: subscription.id,
@@ -247,5 +282,20 @@ export async function POST(req: Request) {
     }
     
     return new Response(`Webhook processing error: ${error instanceof Error ? error.message : 'Unknown error'}`, { status: 500 });
+  }
+}
+
+// Helper function to find userId from customer ID
+async function findUserIdFromCustomer(customerId: string): Promise<string | null> {
+  try {
+    const userSubscription = await db.userSubscription.findUnique({
+      where: { stripeCustomerId: customerId },
+      select: { userId: true }
+    });
+    
+    return userSubscription?.userId || null;
+  } catch (error) {
+    console.error('Error finding user from customer ID:', error);
+    return null;
   }
 }
