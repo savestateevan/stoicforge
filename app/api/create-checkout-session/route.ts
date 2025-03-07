@@ -21,10 +21,10 @@ const TEST_PRICES = {
 
 // Define credits for each plan
 const PLAN_CREDITS = {
-  [TEST_PRICES.BEGINNER]: 100, // Beginner plan (test)
-  [TEST_PRICES.PRO]: 250,      // Pro plan (test)
-  'price_1QaoC5ISdNa3NclOt5MQPbR3': 100, // Beginner plan
-  'price_1QaojPISdNa3NclOEL5MFFsA': 250  // Pro plan
+  [TEST_PRICES.BEGINNER]: 200, // Beginner plan (test)
+  [TEST_PRICES.PRO]: 400,      // Pro plan (test)
+  'price_1QaoC5ISdNa3NclOt5MQPbR3': 200, // Beginner plan
+  'price_1QaojPISdNa3NclOEL5MFFsA': 400  // Pro plan
 }
 
 export async function POST(req: NextRequest) {
