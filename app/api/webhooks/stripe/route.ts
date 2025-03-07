@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get('Stripe-Signature')!;
+  const signature = headers().get('stripe-signature')!;
 
   console.log('Received webhook with signature:', signature ? 'present' : 'missing');
 
@@ -30,123 +30,119 @@ export async function POST(req: Request) {
       dbConnected: !!db
     });
 
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
 
     console.log(`Webhook received: ${event.type}`);
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      
-      // Log all possible user identifiers
-      console.log('Webhook user identifiers:', {
-        client_reference_id: session.client_reference_id,
-        metadata_userId: session.metadata?.userId,
-        customer_id: session.customer,
-        payment_intent: session.payment_intent
-      });
-      
-      // Try multiple methods to find the user
-      let userId = null;
-      
-      // Method 1: client_reference_id (best practice)
-      if (session.client_reference_id) {
-        userId = session.client_reference_id;
-        console.log('Using client_reference_id for user lookup:', userId);
-      } 
-      // Method 2: metadata
-      else if (session.metadata?.userId) {
-        userId = session.metadata.userId;
-        console.log('Using metadata.userId for user lookup:', userId);
-      }
-      // Method 3: Look up by Stripe customer ID if you store it
-      else if (session.customer) {
-        console.log('Looking up user by customer ID:', session.customer);
-        const userSubscription = await db.userSubscription.findUnique({
-          where: { stripeCustomerId: session.customer as string }
-        });
-        
-        if (userSubscription) {
-          userId = userSubscription.userId;
-          console.log('Found user by customer ID:', userId);
-        }
-      }
-      
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.metadata?.userId || session.client_reference_id;
+
       if (!userId) {
         console.error('Could not identify user from webhook data!');
-        // Return 200 so Stripe won't retry - log this issue for manual resolution
-        return new Response(JSON.stringify({ 
-          error: 'Could not identify user', 
-          received: true 
-        }), { status: 200 });
+        return new Response('User identification failed', { status: 400 });
       }
-      
-      // Now try to find and update the user
-      console.log(`Attempting to update credits for user ${userId}`);
-      
-      // Get current credits first
-      const currentUser = await db.user.findUnique({
-        where: { id: userId }
-      });
-      
-      if (!currentUser) {
-        console.error(`User ${userId} not found in database!`);
-        return new Response(JSON.stringify({ 
-          error: 'User not found in database', 
-          received: true 
-        }), { status: 200 });
-      }
-      
-      console.log(`Found user ${userId}, current credits: ${currentUser.credits}`);
-      
-      // Determine number of credits to add based on the price ID
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-      console.log('Line items:', lineItems.data);
-      
-      const creditsToAdd = 100; // Default fallback
-      // Your logic to determine credits based on the product/price
-      
-      // Update the user's credits
-      const updatedUser = await db.user.update({
+
+      const creditsToAdd = parseInt(session.metadata?.credits || '0', 10);
+      console.log(`Adding ${creditsToAdd} credits to user ${userId}`);
+
+      // First update user credits
+      await db.user.update({
         where: { id: userId },
         data: {
-          credits: { increment: creditsToAdd }
+          credits: { increment: creditsToAdd },
+        },
+      });
+
+      // Then update or create UserSubscription record
+      await db.userSubscription.upsert({
+        where: { userId },
+        create: {
+          userId,
+          stripeCustomerId: session.customer as string,
+          stripeSubscriptionId: session.subscription as string,
+          stripePriceId: session.metadata?.priceId,
+          stripeCurrentPeriodEnd: session.metadata?.currentPeriodEnd 
+            ? new Date(parseInt(session.metadata.currentPeriodEnd) * 1000) 
+            : undefined,
+        },
+        update: {
+          stripeCustomerId: session.customer as string,
+          stripeSubscriptionId: session.subscription as string,
+          stripePriceId: session.metadata?.priceId,
+          stripeCurrentPeriodEnd: session.metadata?.currentPeriodEnd 
+            ? new Date(parseInt(session.metadata.currentPeriodEnd) * 1000) 
+            : undefined,
         }
       });
-      
-      console.log(`Successfully updated user ${userId}, new credits: ${updatedUser.credits}`);
+
+      console.log(`Credits updated successfully for user ${userId}`);
     }
 
     // Handle subscription lifecycle events
     if (event.type === 'customer.subscription.created' || 
         event.type === 'customer.subscription.updated') {
       const subscription = event.data.object as Stripe.Subscription;
-      // You could update a subscription status in your database here
+      
+      // Find the userId from subscription metadata
+      const userId = subscription.metadata?.userId;
+      
+      if (userId) {
+        // Update subscription information
+        await db.userSubscription.upsert({
+          where: { userId },
+          create: {
+            userId,
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            stripePriceId: subscription.items.data[0]?.price.id,
+            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          },
+          update: {
+            stripeSubscriptionId: subscription.id,
+            stripePriceId: subscription.items.data[0]?.price.id,
+            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          }
+        });
+        
+        // Update user subscription status
+        await db.user.update({
+          where: { id: userId },
+          data: {
+            isActiveSubscriber: subscription.status === 'active',
+            subscriptionType: subscription.status === 'active' ? 'PRO' : 'FREE',
+            userSubscriptionId: subscription.id,
+          }
+        });
+      }
+      
       console.log(`Subscription ${subscription.id} ${event.type.includes('created') ? 'created' : 'updated'}`);
-      console.log('Subscription details:', {
-        id: subscription.id,
-        status: subscription.status,
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-      });
     }
 
     if (event.type === 'customer.subscription.deleted') {
       const subscription = event.data.object as Stripe.Subscription;
-      // Handle subscription cancellation
+      
+      // Find the userId from subscription metadata
+      const userId = subscription.metadata?.userId;
+      
+      if (userId) {
+        // Update user subscription status
+        await db.user.update({
+          where: { id: userId },
+          data: {
+            isActiveSubscriber: false,
+            subscriptionType: 'FREE',
+          }
+        });
+      }
+      
       console.log(`Subscription ${subscription.id} cancelled`);
     }
 
-    return new Response(JSON.stringify({ received: true }), { status: 200 });
+    return new Response('Webhook processed successfully', { status: 200 });
   } catch (error) {
-    console.error('Webhook error:', error instanceof Error ? error.message : String(error));
-    return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      }), 
-      { status: 400 }
-    );
+    console.error('Webhook processing error:', error instanceof Error ? error.message : String(error));
+    console.error('Webhook processing error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    return new Response('Webhook processing error', { status: 500 });
   }
 }
