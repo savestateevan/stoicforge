@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       
       billing_address_collection: 'auto',
       
-      success_url: `${process.env.NEXT_PUBLIC_URL}/pricing?success=true`,
+      success_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing?canceled=true`,
       
       subscription_data: {

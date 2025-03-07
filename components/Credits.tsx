@@ -93,7 +93,7 @@ export function CreditsDisplay() {
     // Check if we're on the successful checkout page
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
-      if (urlParams.get('success') === 'true') {
+      if (urlParams.get('success') === 'true' || urlParams.get('session_id')) {
         console.log('Detected successful checkout, refreshing credits...')
         // Force an immediate refresh after successful payment
         handleRefresh()
