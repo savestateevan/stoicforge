@@ -5,7 +5,7 @@ import { Redis } from '@upstash/redis'
 import { db } from '@/lib/db'
 import { getAuth } from '@clerk/nextjs/server'
 
-
+// Vercel timeout is 60 seconds, so we need to set a longer timeout for the chat API
 export const maxDuration = 60;
 
 // Initialize Redis client
