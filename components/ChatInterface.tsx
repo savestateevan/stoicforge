@@ -7,6 +7,7 @@ import { Textarea } from './ui/textarea'
 import { Card } from './ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -21,7 +22,7 @@ export default function ChatInterface() {
   const [loading, setLoading] = useState(false)
   const [mentor, setMentor] = useState<Mentor>('marcus')
   const [credits, setCredits] = useState<number | null>(null)
-  const { toast } = useToast()
+  const { toast: oldToast } = useToast()
 
   const fetchCredits = async () => {
     try {
@@ -29,6 +30,18 @@ export default function ChatInterface() {
       if (!response.ok) throw new Error('Failed to fetch credits')
       const data = await response.json()
       setCredits(data.credits)
+      
+      if (data.credits === 0) {
+        toast.error("You're out of credits", {
+          description: "Purchase more credits to continue your conversation.",
+          action: {
+            label: "Get Credits",
+            onClick: () => window.location.href = "/pricing"
+          },
+          position: "top-center",
+          duration: 5000
+        })
+      }
     } catch (error) {
       console.error('Error fetching credits:', error)
     }
@@ -36,16 +49,30 @@ export default function ChatInterface() {
 
   useEffect(() => {
     fetchCredits()
-  }, [])
+    
+    if (credits === 0) {
+      toast.error("You're out of credits", {
+        description: "Purchase more credits to continue your conversation.",
+        action: {
+          label: "Get Credits",
+          onClick: () => window.location.href = "/pricing"
+        },
+        position: "top-center",
+        duration: 5000
+      })
+    }
+  }, [credits])
 
   const handleSendMessage = async () => {
     if (!input.trim() || loading) return
     
     if (credits !== null && credits <= 0) {
-      toast({
-        title: "No credits remaining",
+      toast.error("No credits remaining", {
         description: "Please purchase more credits to continue chatting",
-        variant: "destructive"
+        action: {
+          label: "Get Credits",
+          onClick: () => window.location.href = "/pricing"
+        }
       })
       return
     }
@@ -76,14 +103,11 @@ export default function ChatInterface() {
       const data = await response.json()
       setMessages(prev => [...prev, { role: 'assistant', content: data.result }])
       
-      // Refresh credits after message sent
       fetchCredits()
     } catch (error) {
       console.error('Error:', error)
-      toast({
-        title: "Error",
-        description: (error as Error).message || "Failed to send message",
-        variant: "destructive"
+      toast.error("Error", {
+        description: (error as Error).message || "Failed to send message"
       })
     } finally {
       setLoading(false)

@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import React from 'react'
+import { Toaster } from 'sonner'
 
 
 const geistSans = localFont({
@@ -41,6 +42,7 @@ export default function RootLayout({
             <Header />
             {children}
           </ThemeProvider>
+          <Toaster />
       </body>
     </html>
     </ClerkProvider>
