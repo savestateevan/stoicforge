@@ -21,7 +21,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "StoicForge",
-  description: "Be better, with us.",
+  description: "Speak to ancient philosophers of the past with Stoicforge",
 }
 
 export default function RootLayout({
