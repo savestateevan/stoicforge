@@ -173,7 +173,7 @@ export default function ChatInterface() {
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask your Stoic mentor a question..."
+          placeholder="Ask a question..."
           className="resize-none"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
