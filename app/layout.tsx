@@ -20,8 +20,18 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "StoicForge",
-  description: "Speak to ancient philosophers of the past with Stoicforge",
+  title:
+  'StoicForge – Chat with Marcus Aurelius, Seneca & More | AI Stoic Mentor',
+  description:
+  'Get actionable, historically‑grounded Stoic advice from AI versions of Marcus Aurelius, Seneca, Epictetus and others. Free to try – forge your resilience today.',
+  openGraph: {
+  images: '/og-card.jpg', // relative paths resolve to your /public folder
+  url: 'https://www.stoicforge.ai',
+  type: 'website',
+},
+alternates: {
+  canonical: 'https://www.stoicforge.ai',
+},
 }
 
 export default function RootLayout({
